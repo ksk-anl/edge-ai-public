@@ -1,0 +1,32 @@
+{
+    "timeformat": "%Y-%m-%d %H:%M:%S.%f",
+    "rdb_access": {
+        "dbname": "",
+        "user": "",
+        "password": "",
+        "host": "",
+        "port": ""
+    },
+    "rts_url": "",
+    "rts_access" : {
+        "username": "",
+        "password": ""
+    },
+    "device_id": 1,
+    "motionsensor_spi": {
+        "busnum": 0,
+        "cs": 0
+    },
+    "adc_i2c" : {
+        "address": 72,
+        "busnum": 1
+    },
+    "logfile": "log.log",
+    "adc_threshold": 2.5,
+    "adc_measurement_interval": 0.1,
+    "number_measurements": 20,
+    "window_length": 3,
+    "wait_time": 2
+}
+
+

@@ -1,0 +1,8 @@
+psycopg2-binary
+
+Adafruit_ADS1x15==1.0.2
+pandas==1.5.2
+python_daemon==3.0.1
+Requests==2.31.0
+smbus2==0.4.2
+spidev==3.6
