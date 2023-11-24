@@ -1,5 +1,6 @@
 {
     "timeformat": "%Y-%m-%d %H:%M:%S.%f",
+    "train": true,
     "rdb_access": {
         "dbname": "",
         "user": "",
@@ -28,5 +29,3 @@
     "window_length": 3,
     "wait_time": 2
 }
-
-

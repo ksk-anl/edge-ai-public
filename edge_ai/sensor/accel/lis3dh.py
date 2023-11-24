@@ -2,35 +2,27 @@ from __future__ import annotations
 
 from typing import Type
 
+from ...bus import I2C, SPI, BaseBus
 from ..basesensor import BaseSensor
-from ...bus import BaseBus, I2C, SPI
+
 
 class LIS3DH(BaseSensor):
     # Allowed values for settings
     DATARATES = {
-        1:    1,
-        10:   2,
-        25:   3,
-        50:   4,
-        100:  5,
-        200:  6,
-        400:  7,
+        1: 1,
+        10: 2,
+        25: 3,
+        50: 4,
+        100: 5,
+        200: 6,
+        400: 7,
         1344: 9,
         1620: 8,
-        5376: 9
-        }
-    MEASUREMENT_RANGES = {
-        2:  0b00,
-        4:  0b01,
-        8:  0b10,
-        16: 0b11
+        5376: 9,
     }
-    SELFTEST_MODES = ['off', 'low', 'high']
-    RESOLUTIONS = {
-        'low' :    8,
-        'normal': 10,
-        'high':   12
-        }
+    MEASUREMENT_RANGES = {2: 0b00, 4: 0b01, 8: 0b10, 16: 0b11}
+    SELFTEST_MODES = ["off", "low", "high"]
+    RESOLUTIONS = {"low": 8, "normal": 10, "high": 12}
 
     # Register addresses
     # Config Registers
@@ -57,10 +49,10 @@ class LIS3DH(BaseSensor):
         super().__init__(bus)
 
         # defaults
-        self._resolution = 'low'
+        self._resolution = "low"
         self._measurement_range = 2
         self._datarate = 5376
-        self._selftest = 'off'
+        self._selftest = "off"
         self._highpass = False
 
     @staticmethod
@@ -75,7 +67,9 @@ class LIS3DH(BaseSensor):
 
     def set_measurement_range(self, measurement_range: int) -> None:
         if measurement_range not in self.MEASUREMENT_RANGES.keys():
-            raise Exception(f"Measurement range must be one of: {', '.join([str(range) for range in self.MEASUREMENT_RANGES.keys()])}")
+            raise Exception(
+                f"Measurement range must be one of: {', '.join([str(range) for range in self.MEASUREMENT_RANGES.keys()])}"
+            )
 
         cfg = self._bus.read_register(self.CTRL_REG4)
 
@@ -89,10 +83,10 @@ class LIS3DH(BaseSensor):
             valid_rates = [str(rate) for rate in self.DATARATES.keys()]
             raise Exception(f"Data Rate must be one of: {', '.join(valid_rates)}Hz")
 
-        if ((datarate == 1620) or (datarate == 5376)) and (self._resolution != 'low'):
+        if ((datarate == 1620) or (datarate == 5376)) and (self._resolution != "low"):
             raise Exception("1620Hz and 5376Hz mode only allowed on Low Power mode")
 
-        if datarate == 1344 and self._resolution == 'low':
+        if datarate == 1344 and self._resolution == "low":
             raise Exception("1344Hz mode not allowed on Low Power mode")
 
         cfg = self._bus.read_register(self.CTRL_REG1)
@@ -107,10 +101,10 @@ class LIS3DH(BaseSensor):
 
         self._resolution = resolution
 
-        if resolution == 'low':
+        if resolution == "low":
             LPen_bit = True
             HR_bit = False
-        elif resolution == 'high':
+        elif resolution == "high":
             LPen_bit = False
             HR_bit = True
         else:
@@ -120,33 +114,35 @@ class LIS3DH(BaseSensor):
         cfg = self._bus.read_register(self.CTRL_REG1)
 
         if LPen_bit:
-            cfg |= 0b00001000 # set LPen bit on register 20 to on
+            cfg |= 0b00001000  # set LPen bit on register 20 to on
         else:
-            cfg &= 0b11110111 # set LPen bit on register 20 to off
+            cfg &= 0b11110111  # set LPen bit on register 20 to off
 
         self._bus.write_register(self.CTRL_REG1, cfg)
 
         cfg = self._bus.read_register(self.CTRL_REG4)
 
         if HR_bit:
-            cfg |= 0b00000100 # set HR bit on register 23 to on
+            cfg |= 0b00000100  # set HR bit on register 23 to on
         else:
-            cfg &= 0b11111011 # set HR bit on register 23 to off
+            cfg &= 0b11111011  # set HR bit on register 23 to off
 
         self._bus.write_register(self.CTRL_REG4, cfg)
 
-    def set_selftest(self, mode: str = 'high') -> None:
+    def set_selftest(self, mode: str = "high") -> None:
         if mode not in self.SELFTEST_MODES:
-            raise Exception(f"Selftest Mode must be one of: {' ,'.join(self.SELFTEST_MODES)}")
+            raise Exception(
+                f"Selftest Mode must be one of: {' ,'.join(self.SELFTEST_MODES)}"
+            )
 
         cfg = self._bus.read_register(self.CTRL_REG4)
 
         cfg &= 0b001
-        if mode == 'off':
+        if mode == "off":
             return
-        elif mode == 'high':
+        elif mode == "high":
             cfg |= 0b100
-        elif mode == 'low':
+        elif mode == "low":
             cfg |= 0b010
 
         self._bus.write_register(self.CTRL_REG4, cfg)
@@ -187,7 +183,7 @@ class LIS3DH(BaseSensor):
         y = self._bus.read_register(self.OUT_Y_H)
         z = self._bus.read_register(self.OUT_Z_H)
 
-        if self._resolution != 'low':
+        if self._resolution != "low":
             xl = self._bus.read_register(self.OUT_X_L)
             yl = self._bus.read_register(self.OUT_Y_L)
             zl = self._bus.read_register(self.OUT_Z_L)
@@ -199,13 +195,13 @@ class LIS3DH(BaseSensor):
             y = (y << 8 | yl) >> bitshift
             z = (z << 8 | zl) >> bitshift
 
-        return (x, y ,z)
+        return (x, y, z)
 
     def _raw_sensor_value_to_gravity(self, value: int) -> float:
         bits = self.RESOLUTIONS[self._resolution]
 
-        max_val = 2 ** bits
-        if value > max_val / 2.:
+        max_val = 2**bits
+        if value > max_val / 2.0:
             value -= max_val
 
-        return float(value) / ((max_val / 2 ) / self._measurement_range)
+        return float(value) / ((max_val / 2) / self._measurement_range)

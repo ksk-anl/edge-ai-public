@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import math
 import time
-
 from typing import Callable
 
 import edge_ai.controller as controller
 import edge_ai.sensor as sensor
+
 
 def allow_kbinterrupt(f: Callable[[], None]) -> Callable[[], None]:
     def inner():
@@ -14,17 +14,20 @@ def allow_kbinterrupt(f: Callable[[], None]) -> Callable[[], None]:
             f()
         except KeyboardInterrupt:
             print("Keyboard Interrupt detected, ending demo...\n")
+
     return inner
+
 
 def _format_motionsensor_output(values: list[float]) -> str:
     final_value = math.sqrt(sum([x**2 for x in values]))
 
     return f'{", ".join([f"{val: 1.5f}" for val in values])}: {final_value}'
 
+
 def _motionsensor_test(sensor: sensor.accel.LIS3DH) -> None:
-    sensor.set_resolution('low')
+    sensor.set_resolution("low")
     sensor.set_datarate(5376)
-    sensor.set_selftest('off')
+    sensor.set_selftest("off")
     sensor.enable_axes()
 
     print("Outputting Motion Sensor output, Ctrl + C to stop:")
@@ -35,25 +38,31 @@ def _motionsensor_test(sensor: sensor.accel.LIS3DH) -> None:
 
         time.sleep(0.1)
 
+
 @allow_kbinterrupt
 def motionsensor_i2c() -> None:
     motionsensor = sensor.accel.LIS3DH.I2C(0x18, 1)
     _motionsensor_test(motionsensor)
+
 
 @allow_kbinterrupt
 def motionsensor_spi() -> None:
     motionsensor = sensor.accel.LIS3DH.SPI(0, 0)
     _motionsensor_test(motionsensor)
 
+
 @allow_kbinterrupt
 def adc_sensor_i2c() -> None:
-    adc = sensor.adc.ADS1015(address = 0x48, busnum = 1)
-    adc.start_diff()
+    adc = sensor.adc.ADS1015.I2C(address=0x48, busnum=1)
+    adc.set_differential_mode()
+    adc.set_data_range(4.096)
+    adc.start_continuous()
 
     print("Outputting ADC output, Ctrl + C to stop:")
     while True:
         print(f"{adc.read()} V")
         time.sleep(0.1)
+
 
 @allow_kbinterrupt
 def motionsensor_controller_spi() -> None:
@@ -66,6 +75,7 @@ def motionsensor_controller_spi() -> None:
         print(_format_motionsensor_output(values))
 
         time.sleep(0.1)
+
 
 @allow_kbinterrupt
 def motionsensor_controller_run_for_spi() -> None:
@@ -85,15 +95,18 @@ def motionsensor_controller_run_for_spi() -> None:
 
     motioncontrol.stop()
 
+
 @allow_kbinterrupt
 def adc_controller_i2c() -> None:
     adc_controller = controller.adc.ADS1015.I2C(0x48, 1)
+    adc_controller.set_data_range(4.096)
     adc_controller.start()
 
     print("Outputting ADC output, Ctrl + C to stop:")
     while True:
         print(f"{adc_controller.read()} V")
         time.sleep(0.1)
+
 
 @allow_kbinterrupt
 def adc_triggers_motionsensor_sensor() -> None:
@@ -104,10 +117,11 @@ def adc_triggers_motionsensor_sensor() -> None:
     motionsensor.set_datarate(5376)
     motionsensor.enable_axes()
 
-    adc = sensor.adc.ADS1015(0x48, 1)
+    adc = sensor.adc.ADS1015.I2C(0x48, 1)
+    adc.set_data_range(4.096)
 
     motionsensor.start()
-    adc.start()
+    adc.start_adc()
 
     while True:
         print("Waiting for ADC to go high before recording motion...")
@@ -119,10 +133,11 @@ def adc_triggers_motionsensor_sensor() -> None:
                 break
 
         finish = time.time() + record_length
-        print(f'Detected high ADC!')
+        print(f"Detected high ADC!")
         while time.time() < finish:
-            print(f'{_format_motionsensor_output(motionsensor.read())}')
+            print(f"{_format_motionsensor_output(motionsensor.read())}")
             time.sleep(0.1)
+
 
 @allow_kbinterrupt
 def adc_triggers_motionsensor_controller() -> None:
@@ -148,14 +163,15 @@ def adc_triggers_motionsensor_controller() -> None:
                 break
 
         finish = time.time() + record_length
-        print(f'Detected high ADC!')
+        print(f"Detected high ADC!")
         while time.time() < finish:
-            print(f'{_format_motionsensor_output(motionsensor.read())}')
+            print(f"{_format_motionsensor_output(motionsensor.read())}")
             time.sleep(0.1)
+
 
 def main():
     while True:
-        print("="*30)
+        print("=" * 30)
         print("Choose a Demo:")
         print("Sensor Class Tests:")
         print("    LIS3DH Tests:")
@@ -177,24 +193,25 @@ def main():
 
         print("\n")
         choice = input("Enter choice (q to quit): ")
-        if choice == 'q':
+        if choice == "q":
             break
-        elif choice == '1':
+        elif choice == "1":
             motionsensor_i2c()
-        elif choice == '2':
+        elif choice == "2":
             motionsensor_spi()
-        elif choice == '3':
+        elif choice == "3":
             adc_sensor_i2c()
-        elif choice == '4':
+        elif choice == "4":
             adc_triggers_motionsensor_sensor()
-        elif choice == '6':
+        elif choice == "6":
             motionsensor_controller_spi()
-        elif choice == '7':
+        elif choice == "7":
             motionsensor_controller_run_for_spi()
-        elif choice == '8':
+        elif choice == "8":
             adc_controller_i2c()
-        elif choice == '9':
+        elif choice == "9":
             adc_triggers_motionsensor_controller()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

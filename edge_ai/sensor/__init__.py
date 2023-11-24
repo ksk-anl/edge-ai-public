@@ -1,4 +1,2 @@
-from . import accel
-from . import adc
-
+from . import accel, adc
 from .basesensor import BaseSensor
