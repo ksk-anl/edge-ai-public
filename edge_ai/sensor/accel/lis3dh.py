@@ -55,6 +55,8 @@ class LIS3DH(BaseSensor):
         self._selftest = "off"
         self._highpass = False
 
+        # TODO: setters should update these
+
     @staticmethod
     def SPI(busnum: int, cs: int, maxspeed: int = 10_000_000, mode: int = 3) -> LIS3DH:
         bus = SPI(busnum, cs, maxspeed, mode)

@@ -7,7 +7,7 @@ from .basebus import BaseBus
 
 class SPI(BaseBus):
     def __init__(
-        self, busnum: int, cs: int, maxspeed: int = 1_000_000, mode: int = 3
+        self, busnum: int, cs: int, maxspeed: int = 10_000_000, mode: int = 3
     ) -> None:
         self._busnum = busnum
         self._cs = cs

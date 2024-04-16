@@ -88,6 +88,8 @@ class ADS1015(BaseSensor):
         self._latching_comp = False
         self._comp_queue = 0
 
+        # TODO: setters should update these
+
     @staticmethod
     def I2C(address: int = 0x48, busnum: int = 1) -> ADS1015:
         bus = I2C(address, busnum)
@@ -119,6 +121,8 @@ class ADS1015(BaseSensor):
         cfg[0] &= 10001111  # TODO: change these to xor
         cfg[0] |= self.CH_SINGLE[channel] << 4
 
+        # TODO: update internal variable _read_single
+
         self._bus.write_register_list(self.CONFIG_REGISTER, cfg)
 
     def set_data_range(self, full_scale_range: float = 2.048) -> None:
@@ -129,6 +133,8 @@ class ADS1015(BaseSensor):
         cfg[0] |= self.RANGES[full_scale_range] << 1
 
         self._bus.write_register_list(self.CONFIG_REGISTER, cfg)
+
+        self._full_range = full_scale_range
 
     def set_continuous(self, continuous: bool = True) -> None:
         # TODO: checks
@@ -241,11 +247,10 @@ class ADS1015(BaseSensor):
         return self._sensor_raw_value_to_v(final)
 
     # TODO: ADC gain setters
-    @staticmethod
-    def _sensor_raw_value_to_v(value: int) -> float:
+    def _sensor_raw_value_to_v(self, value: int) -> float:
         # convert two's complement
         max_value = 2**12
-        if value > max_value:
+        if value > max_value / 2:
             value -= max_value
 
-        return (value * 4.096 * 2) / (max_value)
+        return (value * self._full_range * 2) / (max_value)
